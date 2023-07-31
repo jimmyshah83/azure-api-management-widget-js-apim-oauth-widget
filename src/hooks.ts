@@ -9,16 +9,21 @@ export const useEditorValues = () => useContext(WidgetDataContext).data.values
 export const useSecrets = () => useContext(SecretsContext)
 
 export function useOnChange(): OnChange<Values> {
-  const {data: {instanceId}} = useContext(WidgetDataContext)
+  const {
+    data: {instanceId},
+  } = useContext(WidgetDataContext)
   return useCallback(values => onChangeWithOrigin("*", instanceId, values), [instanceId])
 }
 
 export function useRequest(): (url: string) => Promise<Response> {
   const secrets = useSecrets()
 
-  return useCallback(url =>
-    fetch(
-      `${secrets.managementApiUrl}${url}?api-version=${secrets.apiVersion}`,
-      secrets.token ? {headers: {Authorization: secrets.token}} : undefined,
-    ), [secrets])
+  return useCallback(
+    url =>
+      fetch(
+        `${secrets.managementApiUrl}${url}?api-version=${secrets.apiVersion}`,
+        secrets.token ? {headers: {Authorization: secrets.token}} : undefined
+      ),
+    [secrets]
+  )
 }

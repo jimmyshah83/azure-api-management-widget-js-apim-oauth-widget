@@ -21,9 +21,10 @@ export const SecretsContext = React.createContext<Secrets>({
   apiVersion: "",
   managementApiUrl: "",
 })
-export const SecretsProvider: React.FC<{children?: React.ReactNode; targetModule: TargetModule}> = (
-  {children, targetModule},
-) => {
+export const SecretsProvider: React.FC<{children?: React.ReactNode; targetModule: TargetModule}> = ({
+  children,
+  targetModule,
+}) => {
   const [secrets, setSecrets] = useState<Secrets | undefined>()
 
   useEffect(() => {
@@ -34,5 +35,7 @@ export const SecretsProvider: React.FC<{children?: React.ReactNode; targetModule
 
   return secrets ? (
     <SecretsContext.Provider value={secrets}>{children}</SecretsContext.Provider>
-  ) : <div className="loading"></div>
+  ) : (
+    <div className="loading"></div>
+  )
 }
