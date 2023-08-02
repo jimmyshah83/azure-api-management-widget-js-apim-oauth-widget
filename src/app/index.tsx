@@ -1,5 +1,6 @@
-import React, {useState} from "react"
+import React, {useEffect, useState} from "react"
 import axios from "axios"
+import queryString from "query-string"
 
 interface TokenResponse {
   access_token: string
@@ -13,13 +14,24 @@ const App: React.FC = () => {
   const clientId = "cc796322-0554-4e71-81ff-69080c007c2c"
   const clientSecret = ".CT8Q~qE2s4zGvU6P5CImG08IOumdMeRaT_k6cK9"
   const tokenEndpoint = "https://login.microsoftonline.com/16b3c013-d300-468d-ac64-7eda0820b6d3/oauth2/v2.0/token"
+  const authorizationEndpoint =
+    "https://login.microsoftonline.com/16b3c013-d300-468d-ac64-7eda0820b6d3/oauth2/v2.0/authorize"
 
   const [token, setToken] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
-  const fetchToken = async (authorizationCode: string) => {
+  useEffect(() => {
+    const urlParams = queryString.parse(window.location.search)
+    console.log("In Use Effect = " + urlParams.code)
+    if (urlParams.code) {
+      const code = urlParams.code
+      console.log("Fetching token with code = " + code)
+      fetchAccessToken(code.toString()).then(token => console.log(token))
+    }
+  }, [])
+
+  const fetchAccessToken = async (authorizationCode: string) => {
     try {
-      console.log("Fetch Token begin")
+      console.log("Initiating token fetch")
       const response = await axios.post<TokenResponse>(
         tokenEndpoint,
         new URLSearchParams({
@@ -40,58 +52,68 @@ const App: React.FC = () => {
       const {access_token} = response.data
       console.log("Access Token fetched = " + access_token)
       setToken(access_token)
-      setError(null)
     } catch (e) {
       console.log("Exception " + e)
-      setError("Failed to fetch the token.")
-    }
-  }
-
-  const getAuthorizationCode = async () => {
-    const params = new URLSearchParams(window.location.search)
-    console.log("Params = " + params)
-    const authorizationCode = params.get("code")
-    if (authorizationCode) {
-      console.log("Fetching token")
-      await fetchToken(authorizationCode)
-    } else {
-      console.log("Error")
-      setError("Authorization code not found in the URL.")
     }
   }
 
   const fetchData = async () => {
     try {
-      console.log("Fetch Data")
+      let bearerToken = `${token}`
+      console.log("Fetching Data - Token: " + bearerToken)
+      if (!token) {
+        console.log("No token found - using hard coded token")
+        bearerToken = "xxx"
+      }
       return await axios
         .get("https://js-apim-cc-01.azure-api.net/echo/resource?param1=sample&param2=2", {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${bearerToken}`,
             "Cache-Control": "no-cache",
           },
         })
         .then(response => {
-          console.log("Response: " + response.data)
-          return response.data
+          console.log("Response: " + response.status)
+          return response.status
         })
     } catch (e) {
-      console.error("Error fetching data:", error)
+      console.error("Error fetching data:", e)
     }
   }
+
+  const initiateOAuthFlow = () => {
+    console.log("Initiating OAuth flow")
+    const params = {
+      response_type: "code",
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: scope,
+    }
+
+    const queryStringParams = queryString.stringify(params)
+    console.log("Query string params: " + queryStringParams)
+
+    const authUrl = `${authorizationEndpoint}?${queryStringParams}`
+    window.location.replace(authUrl)
+  }
+
   const handleSubmit = async () => {
-    console.log("Submit")
-    await getAuthorizationCode()
-    console.log("Got authorization code")
-    await fetchData().then(response => console.log(response))
-    console.log("DONE")
+    await fetchData().then(response => console.log("DONE" + response))
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <button type="submit" className="button button-primary">
-        Submit
-      </button>
-    </form>
+    <div>
+      <div>
+        <button onClick={handleSubmit} type="submit" className="button button-primary">
+          Submit
+        </button>
+      </div>
+      <div>
+        <button onClick={initiateOAuthFlow} type="submit" className="button button-primary">
+          Login
+        </button>
+      </div>
+    </div>
   )
 }
 

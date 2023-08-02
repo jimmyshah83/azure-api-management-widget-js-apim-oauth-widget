@@ -14,6 +14,7 @@
     "@azure/api-management-custom-widgets-tools": "^1.0.0-beta.1",
     "@types/axios": "^0.14.0",
     "axios": "^1.4.0",
+    "query-string": "^8.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
