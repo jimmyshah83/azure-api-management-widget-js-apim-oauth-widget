@@ -1,60 +1,44 @@
 import React, {useEffect, useState} from "react"
 import axios from "axios"
 import queryString from "query-string"
-
-interface TokenResponse {
-  access_token: string
-  token_type: string
-  expires_in: number
-}
+import { useMsal, MsalProvider } from "@azure/msal-react";
+import { loginRequest } from "../authConfig";
+import { InteractionRequiredAuthError } from "@azure/msal-browser";
 
 const App: React.FC = () => {
-  const redirectUri = "http://localhost:3000/"
-  const scope = "api://82a8f3b7-ab78-4117-bc09-42d71034d66a/Read"
-  const clientId = "cc796322-0554-4e71-81ff-69080c007c2c"
-  const clientSecret = ".CT8Q~qE2s4zGvU6P5CImG08IOumdMeRaT_k6cK9"
-  const tokenEndpoint = "https://login.microsoftonline.com/16b3c013-d300-468d-ac64-7eda0820b6d3/oauth2/v2.0/token"
-  const authorizationEndpoint =
-    "https://login.microsoftonline.com/16b3c013-d300-468d-ac64-7eda0820b6d3/oauth2/v2.0/authorize"
+
+  const { instance } = useMsal();
+  var request = {
+    scopes: ["api://82a8f3b7-ab78-4117-bc09-42d71034d66a/Read"],
+  }
 
   const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
-    const urlParams = queryString.parse(window.location.search)
-    console.log("In Use Effect = " + urlParams.code)
-    if (urlParams.code) {
-      const code = urlParams.code
-      console.log("Fetching token with code = " + code)
-      fetchAccessToken(code.toString()).then(token => console.log(token))
+    if (!token) {
+      console.log("No token found - aquireing token")
+      aquireToken()
     }
   }, [])
 
-  const fetchAccessToken = async (authorizationCode: string) => {
-    try {
-      console.log("Initiating token fetch")
-      const response = await axios.post<TokenResponse>(
-        tokenEndpoint,
-        new URLSearchParams({
-          grant_type: "authorization_code",
-          client_id: clientId,
-          client_secret: clientSecret,
-          code: authorizationCode,
-          redirect_uri: redirectUri,
-          scope: scope,
-        }),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      )
+  const aquireToken = async () => {
+    console.log("Aquiring Token");
+    instance.acquireTokenSilent(request).then(tokenResponse => {
+      console.log("Token Response: " + tokenResponse.accessToken)
+      setToken(tokenResponse.accessToken)
+  }).catch(async (error) => {
+      console.log("Error: " + error);
+      if (error instanceof InteractionRequiredAuthError) {
+          return instance.acquireTokenRedirect(request);
+      }
+  })
+  }
 
-      const {access_token} = response.data
-      console.log("Access Token fetched = " + access_token)
-      setToken(access_token)
-    } catch (e) {
-      console.log("Exception " + e)
-    }
+  const handleLogin = () => {
+    console.log("Login")
+    instance.loginPopup(loginRequest).catch((e) => {
+      console.log("Error login" + e);
+    })
   }
 
   const fetchData = async () => {
@@ -81,39 +65,30 @@ const App: React.FC = () => {
     }
   }
 
-  const initiateOAuthFlow = () => {
-    console.log("Initiating OAuth flow")
-    const params = {
-      response_type: "code",
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      scope: scope,
-    }
-
-    const queryStringParams = queryString.stringify(params)
-    console.log("Query string params: " + queryStringParams)
-
-    const authUrl = `${authorizationEndpoint}?${queryStringParams}`
-    window.location.replace(authUrl)
-  }
-
   const handleSubmit = async () => {
-    await fetchData().then(response => console.log("DONE" + response))
+    await fetchData().then(response => {      
+      console.log("DONE" + response)
+      return response
+    }).catch(error => {
+      console.log("Error: " + error)
+    })
   }
 
   return (
-    <div>
+    <MsalProvider instance={instance}>
       <div>
-        <button onClick={handleSubmit} type="submit" className="button button-primary">
-          Submit
-        </button>
+        <div>
+          <button onClick={handleSubmit} type="submit" className="button button-primary">
+            Submit
+          </button>
+        </div>
+        <div>
+          <button onClick={() => handleLogin()} type="submit" className="button button-primary">
+            Login
+          </button>
+        </div>
       </div>
-      <div>
-        <button onClick={initiateOAuthFlow} type="submit" className="button button-primary">
-          Login
-        </button>
-      </div>
-    </div>
+    </MsalProvider>
   )
 }
 
