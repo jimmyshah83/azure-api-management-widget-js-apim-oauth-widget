@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React from "react"
 import axios from "axios"
 import {MsalProvider, useMsal} from "@azure/msal-react"
 import {loginRequest, msalConfig} from "../authConfig"
@@ -10,30 +10,36 @@ const App: React.FC = () => {
     scopes: ["api://0070b850-ae4e-4823-94f2-babacb14ec84/Read"],
   }
 
-  const [token, setToken] = useState<string | null>(null)
+  // const [token, setToken] = useState<string | null>(null)
   const pca = new PublicClientApplication(msalConfig)
+  // const activeAccount = pca.getAllAccounts()[0]
 
   const handleLogin = async () => {
     console.log("Initiate Login")
     await instance
       .loginPopup(loginRequest)
       .then(response => {
-        console.log("Login Response: " + response)
+        console.log("Login Response Account: " + response.account?.name)
         pca.setActiveAccount(response.account)
-        pca.acquireTokenSilent(request).then(tokenResponse => {
-          console.log("Token Response: " + tokenResponse.accessToken)
-          setToken(tokenResponse.accessToken)
-        })
       })
       .catch(e => {
-        console.log("Error login" + e)
+        console.log("Failed to login" + e)
       })
   }
 
   const fetchData = async () => {
     try {
-      let bearerToken = `${token}`
-      console.log("Fetching Data - Token: " + bearerToken)
+      let bearerToken = ""
+      console.log("Acquiring Token")
+      await pca
+        .acquireTokenPopup(request)
+        .then(tokenResponse => {
+          console.log("Token Response: " + tokenResponse.accessToken)
+          bearerToken = tokenResponse.accessToken
+        })
+        .catch(e => {
+          console.log("Failed to fetch token: " + e)
+        })
       return await axios
         .get("https://js-apim-cc-01.azure-api.net/echo/resource?param1=sample&param2=2", {
           headers: {
