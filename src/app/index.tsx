@@ -34,10 +34,6 @@ const App: React.FC = () => {
     try {
       let bearerToken = `${token}`
       console.log("Fetching Data - Token: " + bearerToken)
-      if (!token) {
-        console.log("No token found - using hard coded token")
-        bearerToken = "xxx"
-      }
       return await axios
         .get("https://js-apim-cc-01.azure-api.net/echo/resource?param1=sample&param2=2", {
           headers: {
