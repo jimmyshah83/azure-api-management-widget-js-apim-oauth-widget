@@ -1,44 +1,33 @@
-import React, {useEffect, useState} from "react"
+import React, {useState} from "react"
 import axios from "axios"
-import queryString from "query-string"
-import { useMsal, MsalProvider } from "@azure/msal-react";
-import { loginRequest } from "../authConfig";
-import { InteractionRequiredAuthError } from "@azure/msal-browser";
+import {MsalProvider, useMsal} from "@azure/msal-react"
+import {loginRequest, msalConfig} from "../authConfig"
+import {PublicClientApplication} from "@azure/msal-browser"
 
 const App: React.FC = () => {
-
-  const { instance } = useMsal();
-  var request = {
-    scopes: ["api://82a8f3b7-ab78-4117-bc09-42d71034d66a/Read"],
+  const {instance} = useMsal()
+  const request = {
+    scopes: ["api://0070b850-ae4e-4823-94f2-babacb14ec84/Read"],
   }
 
   const [token, setToken] = useState<string | null>(null)
+  const pca = new PublicClientApplication(msalConfig)
 
-  useEffect(() => {
-    if (!token) {
-      console.log("No token found - aquireing token")
-      aquireToken()
-    }
-  }, [])
-
-  const aquireToken = async () => {
-    console.log("Aquiring Token");
-    instance.acquireTokenSilent(request).then(tokenResponse => {
-      console.log("Token Response: " + tokenResponse.accessToken)
-      setToken(tokenResponse.accessToken)
-  }).catch(async (error) => {
-      console.log("Error: " + error);
-      if (error instanceof InteractionRequiredAuthError) {
-          return instance.acquireTokenRedirect(request);
-      }
-  })
-  }
-
-  const handleLogin = () => {
-    console.log("Login")
-    instance.loginPopup(loginRequest).catch((e) => {
-      console.log("Error login" + e);
-    })
+  const handleLogin = async () => {
+    console.log("Initiate Login")
+    await instance
+      .loginPopup(loginRequest)
+      .then(response => {
+        console.log("Login Response: " + response)
+        pca.setActiveAccount(response.account)
+        pca.acquireTokenSilent(request).then(tokenResponse => {
+          console.log("Token Response: " + tokenResponse.accessToken)
+          setToken(tokenResponse.accessToken)
+        })
+      })
+      .catch(e => {
+        console.log("Error login" + e)
+      })
   }
 
   const fetchData = async () => {
@@ -66,12 +55,14 @@ const App: React.FC = () => {
   }
 
   const handleSubmit = async () => {
-    await fetchData().then(response => {      
-      console.log("DONE" + response)
-      return response
-    }).catch(error => {
-      console.log("Error: " + error)
-    })
+    await fetchData()
+      .then(response => {
+        console.log("DONE" + response)
+        return response
+      })
+      .catch(error => {
+        console.log("Error: " + error)
+      })
   }
 
   return (
