@@ -1,0 +1,35 @@
+.button-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.button-text {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.button-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.button-primary:hover {
+    background-color: #0056b3;
+}

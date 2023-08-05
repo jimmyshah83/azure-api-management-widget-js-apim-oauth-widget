@@ -1,8 +1,9 @@
-import React from "react"
+import React, { useState } from "react";
 import axios from "axios"
 import {MsalProvider, useMsal} from "@azure/msal-react"
 import {loginRequest, msalConfig} from "../authConfig"
 import {PublicClientApplication} from "@azure/msal-browser"
+import "./index.css"
 
 const App: React.FC = () => {
   const {instance} = useMsal()
@@ -10,9 +11,8 @@ const App: React.FC = () => {
     scopes: ["api://0070b850-ae4e-4823-94f2-babacb14ec84/Read"],
   }
 
-  // const [token, setToken] = useState<string | null>(null)
+  const [response, setResponse] = useState<number | undefined>(undefined)
   const pca = new PublicClientApplication(msalConfig)
-  // const activeAccount = pca.getAllAccounts()[0]
 
   const handleLogin = async () => {
     console.log("Initiate Login")
@@ -59,7 +59,7 @@ const App: React.FC = () => {
   const handleSubmit = async () => {
     await fetchData()
       .then(response => {
-        console.log("DONE" + response)
+        setResponse(response)
         return response
       })
       .catch(error => {
@@ -69,13 +69,14 @@ const App: React.FC = () => {
 
   return (
     <MsalProvider instance={instance}>
-      <div>
-        <div>
+      <div className="button-container">
+        <div className="button-text">
+          <p>Response: {response}</p>
+        </div>
+        <div className="button-group">
           <button onClick={handleSubmit} type="submit" className="button button-primary">
             Submit
           </button>
-        </div>
-        <div>
           <button onClick={() => handleLogin()} type="submit" className="button button-primary">
             Login
           </button>
