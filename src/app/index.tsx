@@ -32,7 +32,7 @@ const App: React.FC = () => {
       let bearerToken = ""
       console.log("Acquiring Token")
       await pca
-        .acquireTokenPopup(request)
+        .acquireTokenSilent(request)
         .then(tokenResponse => {
           console.log("Token Response: " + tokenResponse.accessToken)
           bearerToken = tokenResponse.accessToken
