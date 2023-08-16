@@ -8,7 +8,7 @@ import "./index.css"
 const App: React.FC = () => {
   const {instance} = useMsal()
   const request = {
-    scopes: ["api://0070b850-ae4e-4823-94f2-babacb14ec84/Read"],
+    scopes: ["api://xxx/Read"],
   }
 
   const [response, setResponse] = useState<number | undefined>(undefined)
@@ -41,7 +41,7 @@ const App: React.FC = () => {
           console.log("Failed to fetch token: " + e)
         })
       return await axios
-        .get("https://js-apim-cc-01.azure-api.net/echo/resource?param1=sample&param2=2", {
+        .get("https://js-apim-portal-demo-01.azure-api.net/echo/resource?param1=sample&param2=sample", {
           headers: {
             Authorization: `Bearer ${bearerToken}`,
             "Cache-Control": "no-cache",
@@ -77,9 +77,9 @@ const App: React.FC = () => {
           <button onClick={handleSubmit} type="submit" className="button button-primary">
             Submit
           </button>
-          <button onClick={() => handleLogin()} type="submit" className="button button-primary">
-            Login
-          </button>
+          {/*<button onClick={() => handleLogin()} type="submit" className="button button-primary">*/}
+          {/*  Login*/}
+          {/*</button>*/}
         </div>
       </div>
     </MsalProvider>

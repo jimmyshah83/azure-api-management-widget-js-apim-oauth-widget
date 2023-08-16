@@ -13,8 +13,8 @@ import {LogLevel} from "@azure/msal-browser"
 
 export const msalConfig = {
   auth: {
-    clientId: "0070b850-ae4e-4823-94f2-babacb14ec84",
-    authority: "https://login.microsoftonline.com/16b3c013-d300-468d-ac64-7eda0820b6d3",
+    clientId: "xxx",
+    authority: "https://login.microsoftonline.com/xxx",
   },
   cache: {
     cacheLocation: "sessionStorage", // This configuring where your cache will be stored
